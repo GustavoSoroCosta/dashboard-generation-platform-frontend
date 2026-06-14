@@ -24,6 +24,12 @@ function DashboardItem({
   canMoveUp,
   canMoveDown,
   datasetOptions,
+  isDragging,
+  isDragOver,
+  onDragStartItem,
+  onDragEnterItem,
+  onDragEndItem,
+  onDropItem,
 }) {
   const [datasetInfo, setDatasetInfo] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -31,6 +37,7 @@ function DashboardItem({
   const [editMode, setEditMode] = useState(false);
   const isMobile = useMediaQuery("(max-width: 768px)");
   const chartHeight = isMobile ? 210 : 260;
+  const canReorder = typeof onDragStartItem === "function";
 
   useEffect(() => {
     let active = true;
@@ -141,8 +148,21 @@ function DashboardItem({
   const showColorPicker = item.type === "bar" || item.type === "line" || item.type === "area" || item.type === "pie";
 
   return (
-    <article className="dashboard-card" role="region" aria-label={item.title}>
+    <article
+      className={`dashboard-card${isDragging ? " is-dragging" : ""}${isDragOver ? " is-drag-over" : ""}`}
+      role="region"
+      aria-label={item.title}
+      draggable={canReorder && !editMode}
+      onDragStart={canReorder ? onDragStartItem : undefined}
+      onDragEnter={canReorder ? onDragEnterItem : undefined}
+      onDragOver={canReorder ? (e) => e.preventDefault() : undefined}
+      onDragEnd={canReorder ? onDragEndItem : undefined}
+      onDrop={canReorder ? (e) => { e.preventDefault(); onDropItem?.(); } : undefined}
+    >
       <div className="card-actions-top">
+        {canReorder && (
+          <span className="drag-handle" title="Arrastar para reordenar" aria-hidden="true">⠿</span>
+        )}
         <button className="icon-btn" onClick={() => setEditMode((v) => !v)} title="Editar" aria-label="Editar componente">✎</button>
         <button className="icon-btn" onClick={onMoveUp} disabled={!canMoveUp} title="Mover para cima" aria-label="Mover para cima">↑</button>
         <button className="icon-btn" onClick={onMoveDown} disabled={!canMoveDown} title="Mover para baixo" aria-label="Mover para baixo">↓</button>

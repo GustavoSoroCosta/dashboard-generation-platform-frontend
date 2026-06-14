@@ -49,6 +49,9 @@ function DashboardApp() {
   const [loaded, setLoaded] = useState(false);
   const [datasetOptions, setDatasetOptions] = useState([]);
   const [showClearModal, setShowClearModal] = useState(false);
+  const [announce, setAnnounce] = useState("");
+  const [dragIndex, setDragIndex] = useState(null);
+  const [overIndex, setOverIndex] = useState(null);
   const isMobile = useMediaQuery("(max-width: 768px)");
 
   // Load datasets + the saved dashboard once a user is authenticated.
@@ -89,11 +92,33 @@ function DashboardApp() {
     sessionStorage.removeItem(AUTH_KEY);
   }
 
-  const addItem = (type) =>
+  const addItem = (type) => {
     setItems((prev) => [...prev, createNewItem(type, datasetOptions[0]?.key)]);
-  const removeItem = (id) => setItems((prev) => prev.filter((item) => item.id !== id));
+    setAnnounce(`Componente adicionado. ${items.length + 1} no total.`);
+  };
+  const removeItem = (id) => {
+    setItems((prev) => prev.filter((item) => item.id !== id));
+    setAnnounce(`Componente removido. ${Math.max(items.length - 1, 0)} no total.`);
+  };
   const updateItem = (id, changes) =>
     setItems((prev) => prev.map((item) => (item.id === id ? { ...item, ...changes } : item)));
+
+  function moveItem(from, to) {
+    if (from == null || to == null || from === to) return;
+    setItems((prev) => {
+      const u = [...prev];
+      const [moved] = u.splice(from, 1);
+      u.splice(to, 0, moved);
+      return u;
+    });
+    setAnnounce("Componente reordenado.");
+  }
+
+  function handleReorderDrop() {
+    if (dragIndex != null && overIndex != null) moveItem(dragIndex, overIndex);
+    setDragIndex(null);
+    setOverIndex(null);
+  }
 
   function moveItemUp(index) {
     if (index === 0) return;
@@ -119,6 +144,8 @@ function DashboardApp() {
 
   return (
     <>
+      <a href="#main-content" className="skip-link">Saltar para o conteúdo</a>
+      <div className="sr-only" role="status" aria-live="polite">{announce}</div>
       {isMobile ? (
         <MobileShell
           items={items}
@@ -144,7 +171,7 @@ function DashboardApp() {
             onLogout={handleLogout}
           />
 
-          <main className="main-content">
+          <main className="main-content" id="main-content">
             <div className="page-header">
               <h1>Meu Dashboard</h1>
               <p>Interface configurável para visualização dinâmica de dados com componentes independentes.</p>
@@ -170,6 +197,12 @@ function DashboardApp() {
                     onUpdate={updateItem}
                     canMoveUp={index > 0}
                     canMoveDown={index < items.length - 1}
+                    isDragging={dragIndex === index}
+                    isDragOver={overIndex === index && dragIndex !== null && dragIndex !== index}
+                    onDragStartItem={() => setDragIndex(index)}
+                    onDragEnterItem={() => setOverIndex(index)}
+                    onDragEndItem={() => { setDragIndex(null); setOverIndex(null); }}
+                    onDropItem={handleReorderDrop}
                   />
                 ))}
               </section>
@@ -187,6 +220,7 @@ function DashboardApp() {
               <button className="modal-cancel-btn" onClick={() => setShowClearModal(false)}>Cancelar</button>
               <button className="modal-confirm-btn" onClick={() => {
                 setItems([]);
+                setAnnounce("Dashboard limpo.");
                 setShowClearModal(false);
               }}>Limpar</button>
             </div>

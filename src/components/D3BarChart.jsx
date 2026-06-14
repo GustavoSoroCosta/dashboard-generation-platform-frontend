@@ -46,14 +46,15 @@ function D3BarChart({ data, color, showTooltip, height = 260 }) {
 
     const tooltip = d3.select(tooltipRef.current);
 
-    g.selectAll(".bar")
+    const reduceMotion =
+      window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    const bars = g.selectAll(".bar")
       .data(data)
       .join("rect")
       .attr("class", "bar")
       .attr("x", (d) => x(d.name))
-      .attr("y", (d) => y(d.value))
       .attr("width", x.bandwidth())
-      .attr("height", (d) => innerHeight - y(d.value))
       .attr("fill", color)
       .attr("rx", 6)
       .style("cursor", showTooltip ? "pointer" : "default")
@@ -74,6 +75,15 @@ function D3BarChart({ data, color, showTooltip, height = 260 }) {
         d3.select(this).attr("opacity", 1);
         tooltip.style("opacity", 0);
       } : null);
+
+    if (reduceMotion) {
+      bars.attr("y", (d) => y(d.value)).attr("height", (d) => innerHeight - y(d.value));
+    } else {
+      bars.attr("y", innerHeight).attr("height", 0)
+        .transition().duration(650).delay((d, i) => i * 55).ease(d3.easeCubicOut)
+        .attr("y", (d) => y(d.value))
+        .attr("height", (d) => innerHeight - y(d.value));
+    }
 
     const ro = new ResizeObserver(() => {
       const newWidth = container.clientWidth;
