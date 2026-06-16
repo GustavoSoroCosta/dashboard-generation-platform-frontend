@@ -1,12 +1,8 @@
 import { datasets } from "../data/datasets.js";
 
-// In-memory mock backend. Mirrors the contract in realApi.js so the two are
-// interchangeable. Persists the dashboard to localStorage and simulates a
-// little network latency so loading/error states behave realistically.
-
+// Backend falso (mesmo contrato que realApi.js): localStorage + dados estáticos.
 const ITEMS_KEY = "dynamic-dashboard-items";
 
-// Contas em memória. Aceita tanto "demo" como o email demo.
 const users = { demo: "demo123", "demo@dashboard.pt": "demo123" };
 
 const delay = (ms = 250) => new Promise((resolve) => setTimeout(resolve, ms));

@@ -12,6 +12,7 @@ function D3PieChart({ data, color, showTooltip, height = 260 }) {
     const container = containerRef.current;
     const width = container.clientWidth || 300;
     const radius = Math.min(width, height) / 2 - 24;
+    const reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
     const svg = d3.select(svgRef.current);
     svg.selectAll("*").remove();
@@ -36,11 +37,10 @@ function D3PieChart({ data, color, showTooltip, height = 260 }) {
 
     const tooltip = d3.select(tooltipRef.current);
 
-    g.selectAll(".slice")
+    const slices = g.selectAll(".slice")
       .data(pie(data))
       .join("path")
       .attr("class", "slice")
-      .attr("d", arc)
       .attr("fill", (d) => colorScale(d.data.name))
       .attr("stroke", "var(--bg-card-solid, #111827)")
       .attr("stroke-width", 2)
@@ -59,7 +59,17 @@ function D3PieChart({ data, color, showTooltip, height = 260 }) {
         tooltip.style("opacity", 0);
       } : null);
 
-    g.selectAll(".pie-label")
+    if (reduceMotion) {
+      slices.attr("d", arc);
+    } else {
+      slices.transition().duration(800).ease(d3.easeCubicOut)
+        .attrTween("d", function (d) {
+          const i = d3.interpolate({ startAngle: 0, endAngle: 0 }, d);
+          return (t) => arc(i(t));
+        });
+    }
+
+    const labels = g.selectAll(".pie-label")
       .data(pie(data))
       .join("text")
       .attr("class", "pie-label d3-label")
@@ -67,6 +77,10 @@ function D3PieChart({ data, color, showTooltip, height = 260 }) {
       .attr("text-anchor", "middle")
       .attr("dominant-baseline", "middle")
       .text((d) => (d.endAngle - d.startAngle > 0.4 ? d.data.name : ""));
+
+    if (!reduceMotion) {
+      labels.attr("opacity", 0).transition().delay(500).duration(400).attr("opacity", 1);
+    }
 
     const ro = new ResizeObserver(() => {
       const newWidth = container.clientWidth;

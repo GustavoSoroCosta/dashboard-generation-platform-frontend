@@ -14,85 +14,48 @@ function D3AreaChart({ data, color, showTooltip, height = 260 }) {
     const margin = { top: 12, right: 12, bottom: 32, left: 48 };
     const innerWidth = width - margin.left - margin.right;
     const innerHeight = height - margin.top - margin.bottom;
+    const reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
     const svg = d3.select(svgRef.current);
     svg.selectAll("*").remove();
     svg.attr("width", width).attr("height", height);
 
-    // Gradient definition
     const gradientId = `area-grad-${Math.random().toString(36).slice(2, 8)}`;
-    const defs = svg.append("defs");
-    const gradient = defs
+    const gradient = svg.append("defs")
       .append("linearGradient")
       .attr("id", gradientId)
       .attr("x1", "0%").attr("y1", "0%")
       .attr("x2", "0%").attr("y2", "100%");
-
-    gradient.append("stop")
-      .attr("offset", "0%")
-      .attr("stop-color", color)
-      .attr("stop-opacity", 0.45);
-
-    gradient.append("stop")
-      .attr("offset", "100%")
-      .attr("stop-color", color)
-      .attr("stop-opacity", 0.02);
+    gradient.append("stop").attr("offset", "0%").attr("stop-color", color).attr("stop-opacity", 0.45);
+    gradient.append("stop").attr("offset", "100%").attr("stop-color", color).attr("stop-opacity", 0.02);
 
     const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
 
-    const x = d3.scalePoint()
-      .domain(data.map((d) => d.name))
-      .range([0, innerWidth]);
+    const x = d3.scalePoint().domain(data.map((d) => d.name)).range([0, innerWidth]);
+    const y = d3.scaleLinear().domain([0, d3.max(data, (d) => d.value) * 1.15]).range([innerHeight, 0]);
 
-    const y = d3.scaleLinear()
-      .domain([0, d3.max(data, (d) => d.value) * 1.15])
-      .range([innerHeight, 0]);
-
-    // Grid
     g.append("g")
       .attr("class", "d3-grid")
       .call(d3.axisLeft(y).ticks(5).tickSize(-innerWidth).tickFormat(""))
       .call((g) => g.select(".domain").remove());
 
-    // Axes
     g.append("g")
       .attr("class", "d3-axis")
       .attr("transform", `translate(0,${innerHeight})`)
       .call(d3.axisBottom(x));
 
-    g.append("g")
-      .attr("class", "d3-axis")
-      .call(d3.axisLeft(y).ticks(5));
+    g.append("g").attr("class", "d3-axis").call(d3.axisLeft(y).ticks(5));
 
-    // Area path (gradient fill)
-    const area = d3.area()
-      .x((d) => x(d.name))
-      .y0(innerHeight)
-      .y1((d) => y(d.value))
-      .curve(d3.curveMonotoneX);
+    const area = d3.area().x((d) => x(d.name)).y0(innerHeight).y1((d) => y(d.value)).curve(d3.curveMonotoneX);
+    const areaPath = g.append("path").datum(data).attr("d", area).attr("fill", `url(#${gradientId})`);
 
-    g.append("path")
-      .datum(data)
-      .attr("d", area)
-      .attr("fill", `url(#${gradientId})`);
+    const line = d3.line().x((d) => x(d.name)).y((d) => y(d.value)).curve(d3.curveMonotoneX);
+    const linePath = g.append("path").datum(data).attr("d", line)
+      .attr("fill", "none").attr("stroke", color).attr("stroke-width", 2.5);
 
-    // Line on top of area
-    const line = d3.line()
-      .x((d) => x(d.name))
-      .y((d) => y(d.value))
-      .curve(d3.curveMonotoneX);
-
-    g.append("path")
-      .datum(data)
-      .attr("d", line)
-      .attr("fill", "none")
-      .attr("stroke", color)
-      .attr("stroke-width", 2.5);
-
-    // Tooltip & dots
     const tooltip = d3.select(tooltipRef.current);
 
-    g.selectAll(".dot")
+    const dots = g.selectAll(".dot")
       .data(data)
       .join("circle")
       .attr("class", "dot")
@@ -116,11 +79,17 @@ function D3AreaChart({ data, color, showTooltip, height = 260 }) {
         tooltip.style("opacity", 0);
       } : null);
 
+    if (!reduceMotion) {
+      const total = linePath.node().getTotalLength();
+      linePath.attr("stroke-dasharray", total).attr("stroke-dashoffset", total)
+        .transition().duration(900).ease(d3.easeCubicInOut).attr("stroke-dashoffset", 0);
+      areaPath.attr("opacity", 0).transition().delay(200).duration(650).attr("opacity", 1);
+      dots.attr("opacity", 0).transition().delay(750).duration(350).attr("opacity", 1);
+    }
+
     const ro = new ResizeObserver(() => {
       const newWidth = container.clientWidth;
-      if (newWidth && newWidth !== width) {
-        svg.attr("width", newWidth);
-      }
+      if (newWidth && newWidth !== width) svg.attr("width", newWidth);
     });
     ro.observe(container);
     return () => ro.disconnect();

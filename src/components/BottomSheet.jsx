@@ -1,9 +1,6 @@
 import { useEffect } from "react";
 
-/**
- * Native-feeling bottom sheet: backdrop + slide-up panel with a drag handle.
- * Mounts only while `open` is true so the slide-in animation replays each time.
- */
+// Bottom sheet nativo: backdrop + painel que desliza (só monta quando aberto).
 function BottomSheet({ open, title, onClose, children }) {
   useEffect(() => {
     if (!open) return;

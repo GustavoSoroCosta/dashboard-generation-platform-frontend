@@ -1,8 +1,6 @@
 import { API_URL } from "./config.js";
 
-// Minimal fetch wrapper for the real backend: JSON in/out, bearer auth,
-// and friendly error messages. Used only when USE_MOCK is false.
-
+// Wrapper de fetch: JSON, token Bearer e erros amigáveis.
 const TOKEN_KEY = "dashboard-token";
 
 export function setToken(token) {

@@ -14,6 +14,7 @@ function D3LineChart({ data, color, showTooltip, height = 260 }) {
     const margin = { top: 12, right: 12, bottom: 32, left: 48 };
     const innerWidth = width - margin.left - margin.right;
     const innerHeight = height - margin.top - margin.bottom;
+    const reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
     const svg = d3.select(svgRef.current);
     svg.selectAll("*").remove();
@@ -21,13 +22,8 @@ function D3LineChart({ data, color, showTooltip, height = 260 }) {
 
     const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
 
-    const x = d3.scalePoint()
-      .domain(data.map((d) => d.name))
-      .range([0, innerWidth]);
-
-    const y = d3.scaleLinear()
-      .domain([0, d3.max(data, (d) => d.value) * 1.15])
-      .range([innerHeight, 0]);
+    const x = d3.scalePoint().domain(data.map((d) => d.name)).range([0, innerWidth]);
+    const y = d3.scaleLinear().domain([0, d3.max(data, (d) => d.value) * 1.15]).range([innerHeight, 0]);
 
     g.append("g")
       .attr("class", "d3-grid")
@@ -39,37 +35,18 @@ function D3LineChart({ data, color, showTooltip, height = 260 }) {
       .attr("transform", `translate(0,${innerHeight})`)
       .call(d3.axisBottom(x));
 
-    g.append("g")
-      .attr("class", "d3-axis")
-      .call(d3.axisLeft(y).ticks(5));
+    g.append("g").attr("class", "d3-axis").call(d3.axisLeft(y).ticks(5));
 
-    const area = d3.area()
-      .x((d) => x(d.name))
-      .y0(innerHeight)
-      .y1((d) => y(d.value))
-      .curve(d3.curveMonotoneX);
+    const area = d3.area().x((d) => x(d.name)).y0(innerHeight).y1((d) => y(d.value)).curve(d3.curveMonotoneX);
+    const areaPath = g.append("path").datum(data).attr("d", area).attr("fill", color).attr("opacity", 0.15);
 
-    g.append("path")
-      .datum(data)
-      .attr("d", area)
-      .attr("fill", color)
-      .attr("opacity", 0.15);
-
-    const line = d3.line()
-      .x((d) => x(d.name))
-      .y((d) => y(d.value))
-      .curve(d3.curveMonotoneX);
-
-    g.append("path")
-      .datum(data)
-      .attr("d", line)
-      .attr("fill", "none")
-      .attr("stroke", color)
-      .attr("stroke-width", 3);
+    const line = d3.line().x((d) => x(d.name)).y((d) => y(d.value)).curve(d3.curveMonotoneX);
+    const linePath = g.append("path").datum(data).attr("d", line)
+      .attr("fill", "none").attr("stroke", color).attr("stroke-width", 3);
 
     const tooltip = d3.select(tooltipRef.current);
 
-    g.selectAll(".dot")
+    const dots = g.selectAll(".dot")
       .data(data)
       .join("circle")
       .attr("class", "dot")
@@ -93,11 +70,17 @@ function D3LineChart({ data, color, showTooltip, height = 260 }) {
         tooltip.style("opacity", 0);
       } : null);
 
+    if (!reduceMotion) {
+      const total = linePath.node().getTotalLength();
+      linePath.attr("stroke-dasharray", total).attr("stroke-dashoffset", total)
+        .transition().duration(900).ease(d3.easeCubicInOut).attr("stroke-dashoffset", 0);
+      areaPath.attr("opacity", 0).transition().delay(250).duration(600).attr("opacity", 0.15);
+      dots.attr("opacity", 0).transition().delay(750).duration(350).attr("opacity", 1);
+    }
+
     const ro = new ResizeObserver(() => {
       const newWidth = container.clientWidth;
-      if (newWidth && newWidth !== width) {
-        svg.attr("width", newWidth);
-      }
+      if (newWidth && newWidth !== width) svg.attr("width", newWidth);
     });
     ro.observe(container);
     return () => ro.disconnect();

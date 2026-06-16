@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ThemeProvider } from "./context/ThemeContext.jsx";
 import { useMediaQuery } from "./hooks/useMediaQuery.js";
 import LoginPage from "./components/LoginPage.jsx";
@@ -6,6 +6,7 @@ import Sidebar from "./components/Sidebar.jsx";
 import EmptyState from "./components/EmptyState.jsx";
 import DashboardItem from "./components/DashboardItem.jsx";
 import MobileShell from "./components/MobileShell.jsx";
+import Toasts from "./components/Toasts.jsx";
 import { getDatasets, getDashboard, saveDashboard, logout as apiLogout } from "./services/api.js";
 
 const AUTH_KEY = "dashboard-auth";
@@ -52,9 +53,11 @@ function DashboardApp() {
   const [announce, setAnnounce] = useState("");
   const [dragIndex, setDragIndex] = useState(null);
   const [overIndex, setOverIndex] = useState(null);
+  const [toasts, setToasts] = useState([]);
+  const toastId = useRef(0);
   const isMobile = useMediaQuery("(max-width: 768px)");
 
-  // Load datasets + the saved dashboard once a user is authenticated.
+  // Carrega datasets + dashboard guardado após login
   useEffect(() => {
     if (!user) return;
     let active = true;
@@ -71,8 +74,7 @@ function DashboardApp() {
     return () => { active = false; };
   }, [user]);
 
-  // Persist the dashboard whenever it changes, debounced so rapid edits
-  // (and a future backend) aren't hammered on every keystroke.
+  // Grava com debounce (não martela o backend a cada alteração)
   useEffect(() => {
     if (!loaded) return;
     const timer = setTimeout(() => { saveDashboard(items).catch(() => {}); }, 500);
@@ -92,13 +94,20 @@ function DashboardApp() {
     sessionStorage.removeItem(AUTH_KEY);
   }
 
+  function notify(message) {
+    setAnnounce(message);
+    const id = ++toastId.current;
+    setToasts((t) => [...t, { id, message }]);
+    setTimeout(() => setToasts((t) => t.filter((x) => x.id !== id)), 2800);
+  }
+
   const addItem = (type) => {
     setItems((prev) => [...prev, createNewItem(type, datasetOptions[0]?.key)]);
-    setAnnounce(`Componente adicionado. ${items.length + 1} no total.`);
+    notify("Componente adicionado");
   };
   const removeItem = (id) => {
     setItems((prev) => prev.filter((item) => item.id !== id));
-    setAnnounce(`Componente removido. ${Math.max(items.length - 1, 0)} no total.`);
+    notify("Componente removido");
   };
   const updateItem = (id, changes) =>
     setItems((prev) => prev.map((item) => (item.id === id ? { ...item, ...changes } : item)));
@@ -111,7 +120,7 @@ function DashboardApp() {
       u.splice(to, 0, moved);
       return u;
     });
-    setAnnounce("Componente reordenado.");
+    notify("Componente reordenado");
   }
 
   function handleReorderDrop() {
@@ -146,6 +155,7 @@ function DashboardApp() {
     <>
       <a href="#main-content" className="skip-link">Saltar para o conteúdo</a>
       <div className="sr-only" role="status" aria-live="polite">{announce}</div>
+      <Toasts toasts={toasts} />
       {isMobile ? (
         <MobileShell
           items={items}
@@ -220,7 +230,7 @@ function DashboardApp() {
               <button className="modal-cancel-btn" onClick={() => setShowClearModal(false)}>Cancelar</button>
               <button className="modal-confirm-btn" onClick={() => {
                 setItems([]);
-                setAnnounce("Dashboard limpo.");
+                notify("Dashboard limpo");
                 setShowClearModal(false);
               }}>Limpar</button>
             </div>
