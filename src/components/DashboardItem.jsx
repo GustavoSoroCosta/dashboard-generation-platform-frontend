@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { getDataset } from "../services/api.js";
 import { useMediaQuery } from "../hooks/useMediaQuery.js";
+import { useTheme } from "../context/theme.js";
 import D3BarChart from "./D3BarChart.jsx";
 import D3LineChart from "./D3LineChart.jsx";
 import D3AreaChart from "./D3AreaChart.jsx";
@@ -14,6 +15,11 @@ const TYPE_LABELS = {
   table: "Tabela",
   kpi: "KPI",
 };
+
+// Paleta "vibrant" de Paul Tol, distinguível com deuteranopia/protanopia.
+// No tema daltónico substitui a cor escolhida no cartão (que pode não ser segura).
+const COLORBLIND_SERIES = "#33BBEE";
+const COLORBLIND_PALETTE = ["#0077BB", "#EE7733", "#009988", "#33BBEE", "#EE3377", "#CC3311", "#BBBBBB"];
 
 function DashboardItem({
   item,
@@ -37,6 +43,10 @@ function DashboardItem({
   const [editMode, setEditMode] = useState(false);
   const isMobile = useMediaQuery("(max-width: 768px)");
   const chartHeight = isMobile ? 210 : 260;
+  const { theme } = useTheme();
+  const isColorblind = theme === "colorblind";
+  const chartColor = isColorblind ? COLORBLIND_SERIES : item.color;
+  const piePalette = isColorblind ? COLORBLIND_PALETTE : null;
   const canReorder = typeof onDragStartItem === "function";
 
   useEffect(() => {
@@ -89,16 +99,16 @@ function DashboardItem({
     );
 
     if (item.type === "bar") {
-      return <D3BarChart data={data} color={item.color} showTooltip={item.showTooltip} height={chartHeight} />;
+      return <D3BarChart data={data} color={chartColor} showTooltip={item.showTooltip} height={chartHeight} />;
     }
     if (item.type === "line") {
-      return <D3LineChart data={data} color={item.color} showTooltip={item.showTooltip} height={chartHeight} />;
+      return <D3LineChart data={data} color={chartColor} showTooltip={item.showTooltip} height={chartHeight} />;
     }
     if (item.type === "area") {
-      return <D3AreaChart data={data} color={item.color} showTooltip={item.showTooltip} height={chartHeight} />;
+      return <D3AreaChart data={data} color={chartColor} showTooltip={item.showTooltip} height={chartHeight} />;
     }
     if (item.type === "pie") {
-      return <D3PieChart data={data} color={item.color} showTooltip={item.showTooltip} height={chartHeight} />;
+      return <D3PieChart data={data} color={chartColor} palette={piePalette} showTooltip={item.showTooltip} height={chartHeight} />;
     }
     if (item.type === "table") {
       return (

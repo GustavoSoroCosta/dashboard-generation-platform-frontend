@@ -1,6 +1,22 @@
 import { useEffect, useRef } from "react";
 import * as d3 from "d3";
 
+// Encurta com reticências os rótulos do eixo X que não cabem na sua faixa,
+// para não se sobreporem aos vizinhos. O nome completo fica num <title>.
+function fitTickLabels(axis, maxWidth) {
+  axis.selectAll(".tick text").each(function (name) {
+    const text = d3.select(this);
+    text.text(name);
+    if (this.getComputedTextLength() <= maxWidth) return;
+    let label = String(name);
+    while (label.length > 1 && this.getComputedTextLength() > maxWidth) {
+      label = label.slice(0, -1);
+      text.text(`${label}…`);
+    }
+    text.append("title").text(name);
+  });
+}
+
 function D3BarChart({ data, color, showTooltip, height = 260 }) {
   const containerRef = useRef();
   const svgRef = useRef();
@@ -35,10 +51,11 @@ function D3BarChart({ data, color, showTooltip, height = 260 }) {
       .call(d3.axisLeft(y).ticks(5).tickSize(-innerWidth).tickFormat(""))
       .call((g) => g.select(".domain").remove());
 
-    g.append("g")
+    const xAxis = g.append("g")
       .attr("class", "d3-axis")
       .attr("transform", `translate(0,${innerHeight})`)
       .call(d3.axisBottom(x));
+    fitTickLabels(xAxis, x.step() - 4);
 
     g.append("g")
       .attr("class", "d3-axis")
@@ -90,6 +107,8 @@ function D3BarChart({ data, color, showTooltip, height = 260 }) {
       if (newWidth && newWidth !== width) {
         svg.attr("width", newWidth);
         x.range([0, newWidth - margin.left - margin.right]);
+        xAxis.call(d3.axisBottom(x));
+        fitTickLabels(xAxis, x.step() - 4);
         g.selectAll(".bar")
           .attr("x", (d) => x(d.name))
           .attr("width", x.bandwidth());

@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import * as d3 from "d3";
 
-function D3PieChart({ data, color, showTooltip, height = 260 }) {
+function D3PieChart({ data, color, palette, showTooltip, height = 260 }) {
   const containerRef = useRef();
   const svgRef = useRef();
   const tooltipRef = useRef();
@@ -24,10 +24,12 @@ function D3PieChart({ data, color, showTooltip, height = 260 }) {
     const colorScale = d3.scaleOrdinal()
       .domain(data.map((d) => d.name))
       .range(
-        data.map((_, i) => {
-          const h = (baseHsl.h + (i * 360) / data.length) % 360;
-          return d3.hsl(h, 0.65, 0.55).toString();
-        })
+        palette
+          ? palette
+          : data.map((_, i) => {
+              const h = (baseHsl.h + (i * 360) / data.length) % 360;
+              return d3.hsl(h, 0.65, 0.55).toString();
+            })
       );
 
     const pie = d3.pie().value((d) => d.value).sort(null);
@@ -91,7 +93,7 @@ function D3PieChart({ data, color, showTooltip, height = 260 }) {
     });
     ro.observe(container);
     return () => ro.disconnect();
-  }, [data, color, showTooltip, height]);
+  }, [data, color, palette, showTooltip, height]);
 
   return (
     <div ref={containerRef} className="chart-wrapper" style={{ position: "relative", height }}>
