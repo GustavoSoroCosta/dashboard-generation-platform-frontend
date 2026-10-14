@@ -7,6 +7,16 @@ visualizações de dados de forma simples e intuitiva.
 Este repositório é o **frontend** do projeto. O backend (API) é uma componente
 separada, desenvolvida por um colega de equipa.
 
+![Dashboard em desktop com KPI, gráficos de barras, linha, circular, área e tabela](docs/screenshots/dashboard-desktop.png)
+
+<p align="center">
+  <img src="docs/screenshots/dashboard-telemovel.png" alt="Dashboard no telemóvel, com barra inferior e botão flutuante" width="300">
+</p>
+
+**Em resumo:** React 19 + D3.js · gráficos desenhados à medida · arrastar-e-largar
+com alternativa por teclado · temas Escuro, Claro e Daltónico · layout móvel e
+Android (Capacitor) · integração REST com autenticação JWT · acessibilidade WCAG.
+
 ---
 
 ## 1. Identificação
@@ -112,7 +122,7 @@ npm run dev        # arrancar em modo desenvolvimento
 ```
 
 Por omissão arranca em **modo demonstração** (sem backend). Credenciais demo:
-`demo` / `demo123`.
+`demo@dashboard.pt` / `demo123` (ou o botão "Preencher com credenciais demo").
 
 Para ligar ao **backend real**: copiar `.env.example` para `.env`, definir
 `VITE_USE_MOCK=false` e `VITE_API_URL`, e ter o backend a correr (ver `BACKEND.md`).
@@ -129,23 +139,3 @@ O trabalho cobre as tarefas do plano, com destaque para:
 - **Tarefa 8** — otimização de desempenho e **acessibilidade**
 - **Tarefa 9** — testes e validação
 - **Tarefa 10** — documentação
-
----
-
-## 8. Para gerar o relatório e o poster
-
-Este projeto vai servir de base a **dois documentos** que serão pedidos a seguir:
-
-1. **Relatório** do trabalho — escrito num **tom humano e natural** (não robótico).
-2. **Poster** do trabalho.
-
-> ⚠️ **Será fornecido um PDF com o formato e os requisitos exatos** (estrutura,
-> secções, dimensões do poster, etc.). **Segue esse PDF como referência principal.**
-> Usa as secções deste README (objetivos, funcionalidades, tecnologias, arquitetura
-> e relação com o plano) como **fonte de conteúdo** para preencher esse formato.
-
-Notas de contexto úteis para a escrita:
-- O âmbito do aluno é o **frontend**; o backend é de um colega (mencionar como
-  componente integrada, não como trabalho próprio).
-- Pontos fortes a realçar: facilidade de uso para não-técnicos, integração real
-  com a API, acessibilidade (WCAG) e a experiência móvel nativa.
