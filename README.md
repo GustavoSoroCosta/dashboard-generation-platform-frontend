@@ -8,7 +8,7 @@ Este repositório é o **frontend** do projeto. O backend (API) é uma component
 separada, desenvolvida por um colega de equipa.
 
 **▶ Demo online:** https://gustavosorocosta.github.io/dashboard-generation-platform-frontend/
-— corre em modo demonstração, sem backend. Entre com o botão "Preencher com credenciais demo".
+— corre em modo demonstração, sem backend. Basta carregar em "Entrar na demo"; o dashboard já abre com componentes de exemplo.
 
 ![Dashboard em desktop com KPI, gráficos de barras, linha, circular, área e tabela](docs/screenshots/dashboard-desktop.png)
 
@@ -125,7 +125,7 @@ npm run dev        # arrancar em modo desenvolvimento
 ```
 
 Por omissão arranca em **modo demonstração** (sem backend). Credenciais demo:
-`demo@dashboard.pt` / `demo123` (ou o botão "Preencher com credenciais demo").
+`demo@dashboard.pt` / `demo123` (ou o botão "Entrar na demo").
 
 Para ligar ao **backend real**: copiar `.env.example` para `.env`, definir
 `VITE_USE_MOCK=false` e `VITE_API_URL`, e ter o backend a correr (ver `BACKEND.md`).

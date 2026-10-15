@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { login as apiLogin, register as apiRegister } from "../services/api.js";
+import { USE_MOCK } from "../services/config.js";
 
 const DEMO_EMAIL = "demo@dashboard.pt";
 const DEMO_PASS = "demo123";
@@ -33,6 +34,19 @@ function LoginPage({ onLogin }) {
     setEmail(DEMO_EMAIL);
     setPassword(DEMO_PASS);
     setError("");
+  }
+
+  // Em modo demonstração entra logo, sem obrigar a preencher o formulário.
+  async function enterDemo() {
+    fillDemo();
+    setLoading(true);
+    try {
+      const user = await apiLogin({ username: DEMO_EMAIL, password: DEMO_PASS });
+      onLogin(user);
+    } catch (err) {
+      setError(err.message || "Não foi possível entrar na demo.");
+      setLoading(false);
+    }
   }
 
   function switchMode() {
@@ -108,11 +122,15 @@ function LoginPage({ onLogin }) {
                   : (isRegister ? "Criar conta" : "Entrar")}
               </button>
 
-              {!isRegister && (
+              {!isRegister && (USE_MOCK ? (
+                <button type="button" className="login-demo-btn login-demo-btn--primary" onClick={enterDemo} disabled={loading}>
+                  Entrar na demo
+                </button>
+              ) : (
                 <button type="button" className="login-demo-btn" onClick={fillDemo}>
                   Preencher com credenciais demo
                 </button>
-              )}
+              ))}
             </form>
 
             <div className="login-hint">

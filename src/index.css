@@ -409,6 +409,24 @@ select {
   color: white;
 }
 
+/* Na demo online é a ação principal para quem chega pela primeira vez */
+.login-demo-btn--primary {
+  color: white;
+  font-size: 15px;
+  font-weight: 600;
+  border: 1px solid rgba(168, 85, 247, 0.7);
+  background: rgba(124, 58, 237, 0.18);
+}
+
+.login-demo-btn--primary:hover:not(:disabled) {
+  background: rgba(124, 58, 237, 0.3);
+}
+
+.login-demo-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .login-hint {
   margin-top: 22px;
   text-align: center;
