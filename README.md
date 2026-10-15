@@ -7,6 +7,9 @@ visualizações de dados de forma simples e intuitiva.
 Este repositório é o **frontend** do projeto. O backend (API) é uma componente
 separada, desenvolvida por um colega de equipa.
 
+**▶ Demo online:** https://gustavosorocosta.github.io/dashboard-generation-platform-frontend/
+— corre em modo demonstração, sem backend. Entre com o botão "Preencher com credenciais demo".
+
 ![Dashboard em desktop com KPI, gráficos de barras, linha, circular, área e tabela](docs/screenshots/dashboard-desktop.png)
 
 <p align="center">
